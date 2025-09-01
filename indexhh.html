@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TJ — The Journey</title>
+<style>
+  :root{
+    --bg1:#ffb6ec; --bg2:#c6a4f2; --card:#0e0d0d; --ink:#050505; --muted:#1d0d0d;
+    --accent:#280d9c; --rose:#fc346c; --mint:#b6f5d6; --gold:#ffe08a; --sky:#b7dbff;
+    --lav:#0a0a0a; --radius:22px; --shadow:0 10px 24px rgba(7, 1, 1, 0.15);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol";
+    color:var(--ink);
+    background: linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;
+    min-height:100vh; position:relative;
+  }
+  .wrap{max-width:980px; margin:0 auto; padding:24px;}
+  header{
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  header h1{
+    margin:4px 0 16px; font-weight:900; letter-spacing:.4px; color:#fff; font-size:42px;
+    text-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+  header button{padding:10px 18px; font-weight:700; border-radius:16px; border:none; cursor:pointer; background:var(--accent); color:#fff; box-shadow:0 8px 16px rgba(107,77,247,.25);}
+  .grid{
+    display:grid; gap:16px;
+    grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+    margin-bottom:18px;
+  }
+  .card{
+    background:var(--card); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow);
+    transition: transform .2s ease, box-shadow .2s ease; cursor:pointer; position:relative; overflow:hidden;
+  }
+  .card:hover{ transform: translateY(-2px); box-shadow:0 16px 28px rgba(0, 0, 0, 0.22); }
+  .card h2{ margin:6px 0 6px; font-size:22px;}
+  .card p{ margin:0; color:var(--muted); }
+  .slay{ background: #df87af;}
+  .mood{ background: #77d67c;}
+  .tea{ background: #c2da3e;}
+  .flex{ background: #548df0;}
+  .strip{
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .pill{
+    background:#aa4693; border-radius:16px; padding:14px 16px; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  }
+  .pill span{font-weight:600}
+  /* Panels */
+  .panel{
+    background:#c7c7f0; border-radius:20px; box-shadow:var(--shadow); padding:18px;
+    margin-top:18px; display:none;
+  }
+  .panel.active{ display:block; }
+  .panel h3{ margin:4px 0 12px; }
+  .row{ display:grid; gap:14px; grid-template-columns:1fr 1fr; }
+  @media (max-width:780px){ .row{ grid-template-columns:1fr; } }
+  textarea,input,select,button{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid #e6e6e6; font:inherit;
+  }
+  textarea{ min-height:120px; }
+  button{
+    background:var(--accent); color:#e3ecec; border:none; font-weight:700; cursor:pointer;
+    box-shadow:0 8px 16px rgba(107,77,247,.25);
+  }
+  button.secondary{ background:#b0b0b3; color:#080808; box-shadow:none; border:1px solid #e7e7ef;}
+  .help{ color:var(--muted); font-size:14px; }
+  .tag{ display:inline-block; background:#9e98c2; color:#5b46d6; border-radius:999px; padding:6px 10px; margin:4px 6px 0 0; font-size:12px; }
+  /* Flashcards */
+  .cards{ display:grid; gap:14px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); margin-top:12px; }
+  .flip{
+    perspective:1000px; height:160px; position:relative;
+  }
+  .flip-inner{
+    position:absolute; inset:0; transition: transform .6s; transform-style:preserve-3d;
+  }
+  .flip.is-flipped .flip-inner{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; background:#ece8e8; border:1px solid #eee; border-radius:18px; box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; padding:14px; backface-visibility:hidden;
+  }
+  .face.back{ transform: rotateY(180deg); background:#f8f8ff;}
+  .muted{ color:#7a7a7a; font-size:13px; }
+  .feed{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .feed-item{ background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; font-size:14px; box-shadow:0 6px 14px rgba(0,0,0,.08); }
+  .success{ color:#137a3a; font-weight:700;}
+  .danger{ color:#b00020; font-weight:700;}
+  footer{margin-top:32px; text-align:center; color:#fff; font-weight:700; text-shadow:0 1px 6px rgba(0,0,0,.25);}
+  /* Login modal */
+  .modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); justify-content:center; align-items:center;}
+  .modal-content{background:#fff; padding:24px; border-radius:20px; max-width:400px; width:90%; box-shadow:var(--shadow);}
+  .modal-content h3{margin-top:0;}
+  .modal-content button.close{background:#b00020; margin-top:12px;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>The Journey</h1>
+      <button id="loginBtn">Login</button>
+    </header>
+
+    <!-- Home cards -->
+    <section class="grid" id="home">
+      <div class="card slay" data-open="slayPanel">
+        <h2>Slay Space</h2>
+        <p>Matric Dance, fashion, confidence</p>
+      </div>
+      <div class="card mood" data-open="moodPanel">
+        <h2>Mood FM</h2>
+        <p>Playlists & study vibes</p>
+      </div>
+      <div class="card tea" data-open="aiPanel">
+        <h2>Spill the Tea</h2>
+        <p>Chat with AI for real</p>
+      </div>
+      <div class="card flex" data-open="flexPanel">
+        <h2>Flex Space</h2>
+        <p>Show off your pics</p>
+      </div>
+    </section>
+
+    <section class="strip">
+      <div class="pill" data-open="heartPanel"><span>❤️ Heart Files</span> <small>Dating, relationships</small></div>
+      <div class="pill" data-open="diaryPanel"><span>📝 Dear Me</span> <small>Write a journal</small></div>
+      <div class="pill" data-open="hsPanel"><span>🎓 High School Support</span> <small>Subjects • Special needs • Tutors • Bullying • Accommodation</small></div>
+      <div class="pill" data-open="flashPanel"><span>📚 Flashcards</span> <small>Turn notes into cards</small></div>
+    </section>
+
+    <!-- High School Panel -->
+    <section id="hsPanel" class="panel">
+      <h3>High School & Varsity Support</h3>
+      <div class="row">
+        <div>
+          <h4>Subject Advice</h4>
+          <label>Current Grade</label>
+          <select id="hs-grade">
+            <option>Grade 8</option><option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12 (Matric)</option>
+          </select>
+          <label style="margin-top:8px;">Favourite subjects</label>
+          <input id="hs-favs" placeholder="e.g. Maths, Life Sciences, History" />
+          <label style="margin-top:8px;">Dream careers</label>
+          <input id="hs-careers" placeholder="e.g. Doctor, Animator, Entrepreneur" />
+          <button id="hs-advise">Get subject suggestions</button>
+          <div class="feed" id="hs-suggest"></div>
+
+          <h4 style="margin-top:14px;">Accommodation</h4>
+          <input id="accom-search" placeholder="Search for accommodation..." />
+          <button id="find-accom">Find options</button>
+          <div class="feed" id="accom-results"></div>
+        </div>
+
+        <div>
+          <h4>Learning Needs</h4>
+          <div class="help">Tell us what you need help with (private):</div>
+          <label><input type="checkbox" class="need" value="Needs extra time in tests"> Needs extra time in tests</label><br/>
+          <label><input type="checkbox" class="need" value="Struggles with reading speed"> Struggles with reading speed</label><br/>
+          <label><input type="checkbox" class="need" value="Difficulty concentrating"> Difficulty concentrating</label><br/>
+          <label><input type="checkbox" class="need" value="Math anxiety"> Math anxiety</label><br/>
+          <label><input type="checkbox" class="need" value="Suspected dyslexia/dyscalculia"> Suspected dyslexia/dyscalculia</label><br/>
+          <button id="needs-save" class="secondary" style="margin-top:8px;">Save my needs</button>
+          <div class="help" id="needs-status"></div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <h4>Tutors & Study Groups</h4>
+          <input id="tutor-subj" placeholder="Subject (e.g. Maths)" />
+          <button id="find-tutors">Find tutors/study groups</button>
+          <div class="feed" id="tutor-results"></div>
+        </div>
+        <div>
+          <h4>Therapists & Bullying Report</h4>
+          <input id="area" placeholder="Your area (optional)" />
+          <button id="find-therapists" class="secondary">Find therapists near me</button>
+          <div class="feed" id="therapist-results"></div>
+
+          <h5 style="margin-top:14px;">Report Bullying (private)</h5>
+          <textarea id="bully-text" placeholder="Describe what happened…"></textarea>
+          <button id="bully-send">Send report</button>
+          <div class="help" id="bully-status"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Diary Panel -->
+    <section id="diaryPanel" class="panel">
+      <h3>Dear Me.....  Private Diary</h3>
+      <textarea id="diary-input" placeholder="Write your entry… (only you can see this on your phone)"></textarea>
+      <button id="diary-save">Save Entry</button>
+      <div class="help">Your entries live in your browser’s storage. You can delete them anytime.</div>
+
+      <h4 style="margin-top:14px;">My Entries</h4>
+      <div id="diary-list" class="feed"></div>
+
+      <h4 style="margin-top:14px;">Your FYP (auto-curated tips)</h4>
+      <div id="fyp" class="feed"></div>
+    </section>
+
+    <!-- Flashcards -->
+    <section id="flashPanel" class="panel">
+      <h3>Flashcards — from your notes</h3>
+      <textarea id="notes" placeholder="Paste notes… (e.g. Photosynthesis is how plants make food using sunlight…)"></textarea>
+      <button id="make-cards">Make 5 cards</button>
+      <div class="cards" id="cards"></div>
+      <div class="help">Tip: click a card to flip 👇</div>
+    </section>
+
+    <!-- Other Panels (placeholders) -->
+    <section id="slayPanel" class="panel"><h3>Slay Space</h3><p class="muted">Matric dance inspo, confidence boosters, outfits, grooming. (Content coming soon.)</p></section>
+    <section id="moodPanel" class="panel"><h3>Mood FM</h3><p class="muted">Study playlists & soundscapes tailored to your diary mood. (Coming soon.)</p></section>
+    <section id="aiPanel" class="panel"><h3>Spill the Tea (AI)</h3><p class="muted">Ask study/career/life questions.</p><textarea placeholder="Ask me anything…"></textarea><button class="secondary">Send</button></section>
+    <section id="flexPanel" class="panel"><h3>Flex Space</h3><p class="muted">Share project pics & wins (safe, moderated). (Coming soon.)</p></section>
+    <section id="heartPanel" class="panel"><h3>Heart Files</h3><p class="muted">Dating & relationships resources, consent, safety, boundaries. (Coming soon.)</p></section>
+
+    <footer>The Journey</footer>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <h3>Login</h3>
+      <input placeholder="Email" type="email" />
+      <input placeholder="Password" type="password" />
+      <button>Login</button>
+      <button class="close" id="closeLogin">Close</button>
+    </div>
+  </div>
+<script>
+  // ---------- Navigation (open panels) ----------
+  document.querySelectorAll("[data-open]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const id = el.getAttribute("data-open");
+      document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      // scroll into view for mobile
+      document.getElementById(id).scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
+
+  // ---------- Subject Advice (simple rule-based demo) ----------
+  const adviseBtn = document.getElementById('hs-advise');
+  adviseBtn.addEventListener('click', ()=>{
+    const grade = document.getElementById('hs-grade').value;
+    const favs = document.getElementById('hs-favs').value.toLowerCase();
+    const careers = document.getElementById('hs-careers').value.toLowerCase();
+    const out = document.getElementById('hs-suggest');
+    out.innerHTML = "";
+
+    function addTag(txt){ const s=document.createElement('div'); s.className='feed-item'; s.textContent=txt; out.appendChild(s); }
+
+    addTag(`Grade: ${grade}`);
+
+    if(careers.includes("doctor") || favs.includes("life") || favs.includes("biology")){
+      addTag("Consider: Life Sciences, Physical Sciences, Maths; Path: Medicine/Health Sciences");
+    }
+    if(careers.includes("engineer") || favs.includes("math") || favs.includes("physics")){
+      addTag("Consider: Maths, Physical Sciences, IT; Path: Engineering/Tech");
+    }
+    if(careers.includes("law") || favs.includes("history") || favs.includes("english")){
+      addTag("Consider: English, History, LO; Path: Law/Social Sciences");
+    }
+    if(careers.includes("animator") || favs.includes("art") || favs.includes("design")){
+      addTag("Consider: Visual Arts, IT, Maths Lit/Maths; Path: Design/Animation");
+    }
+    if(out.children.length===1){ addTag("General set: English, Maths or Maths Lit, LO + 3 activities you enjoy & can excel in."); }
+  });
+
+  // ---------- Learning Needs save ----------
+  document.getElementById('needs-save').addEventListener('click', ()=>{
+    const chosen=[...document.querySelectorAll('.need:checked')].map(x=>x.value);
+    localStorage.setItem('tj_needs', JSON.stringify(chosen));
+    document.getElementById('needs-status').textContent = "Saved. Your teachers (with consent) can view anonymized needs.";
+  });
+
+  // ---------- Tutors / Study groups (demo) ----------
+  document.getElementById('find-tutors').addEventListener('click', ()=>{
+    const subj = document.getElementById('tutor-subj').value.trim();
+    const out = document.getElementById('tutor-results'); out.innerHTML="";
+    const mock = subj ? [
+      `TutorMe: ${subj} — R120/hr — Online`,
+      `Campus Buddies: ${subj} study group — Saturdays 10:00`,
+      `EduReach: ${subj} revision bootcamp — Next week`
+    ] : [
+      "TutorMe: Maths — R120/hr  Online",
+      "Campus Buddies: Science study group, Wed 15:00",
+      "EduReach: English essay clinic,  Thu 17:00"
+    ];
+    mock.forEach(t=>{ const d=document.createElement('div'); d.className='feed-item'; d.textContent=t; out.appendChild(d); });
+  });
+
+  // ---------- Therapists (demo) ----------
+  document.getElementById('find-therapists').addEventListener('click', ()=>{
+    const area = document.getElementById('area').value || "your area";
+    const out = document.getElementById('therapist-results'); out.innerHTML="";
+    [ `School Psych Services — ${area}`,
+      `Talk2Me Youth Line (free)`,
+      `Calm Minds Therapy — sliding scale`
+    ].forEach(t=>{ const d=document.createElement('div'); d.className='feed-item'; d.textContent=t; out.appendChild(d); });
+  });
+
+  // ---------- Bullying report ----------
+  document.getElementById('bully-send').addEventListener('click', ()=>{
+    const txt = document.getElementById('bully-text').value.trim();
+    if(!txt){ document.getElementById('bully-status').textContent="Please describe the incident."; return; }
+    const reports = JSON.parse(localStorage.getItem('tj_bully')||"[]");
+    reports.push({txt, at: new Date().toISOString()});
+    localStorage.setItem('tj_bully', JSON.stringify(reports));
+    document.getElementById('bully-text').value="";
+    document.getElementById('bully-status').innerHTML = "<span class='success'>Report saved privately.</span> You can share with a teacher/counsellor when ready.";
+  });
+
+  // ---------- Diary ----------
+  const diaryList = document.getElementById('diary-list');
+  function renderDiary(){
+    diaryList.innerHTML="";
+    (JSON.parse(localStorage.getItem('tj_diary')||"[]")).slice().reverse().forEach(e=>{
+      const d=document.createElement('div'); d.className='feed-item'; d.textContent = new Date(e.at).toLocaleString()+": "+e.text; diaryList.appendChild(d);
+    });
+  }
+  document.getElementById('diary-save').addEventListener('click', ()=>{
+    const text = document.getElementById('diary-input').value.trim();
+    if(!text) return;
+    const entries = JSON.parse(localStorage.getItem('tj_diary')||"[]");
+    entries.push({text, at:new Date().toISOString()});
+    localStorage.setItem('tj_diary', JSON.stringify(entries));
+    document.getElementById('diary-input').value="";
+    renderDiary(); buildFYP();
+  });
+  renderDiary();
+
+  // ---------- FYP from diary keywords (demo) ----------
+  const fyp = document.getElementById('fyp');
+  function buildFYP(){
+    fyp.innerHTML="";
+    const entries = (JSON.parse(localStorage.getItem('tj_diary')||"[]"));
+    const all = entries.map(e=>e.text.toLowerCase()).join(" ");
+    const tips=[];
+    if(/anx|stress|overwhelm/.test(all)) tips.push("Breathing exercise: 4-7-8 for 2 minutes");
+    if(/math|algebra|calculus|equation/.test(all)) tips.push("Free Maths playlist: Khan Academy — Algebra essentials");
+    if(/biology|life sciences|photosynthesis/.test(all)) tips.push("Quick concept map: Photosynthesis inputs/outputs");
+    if(/bully|bullied|harass/.test(all)) tips.push("Save evidence safely & talk to a trusted adult; report via TJ");
+    if(/career|subject|uni|varsity|matric/.test(all)) tips.push("Subject ⇄ Career guide: match what you enjoy to real paths");
+    if(!tips.length) tips.push("Keep journaling, your FYP learns what to surface for you.");
+    tips.forEach(t=>{ const d=document.createElement('div'); d.className='feed-item'; d.textContent=t; fyp.appendChild(d); });
+  }
+  buildFYP();
+
+  // ---------- Flashcards (local, simple split) ----------
+  function makeCardsFromText(txt){
+    // naive split: sentences -> first 5 Q/A (demo)
+    const sentences = txt.split(/[.?!]\s+/).filter(Boolean);
+    const pairs = [];
+    for(let i=0;i<5;i++){
+      const s = sentences[i] || "Add more notes to improve cards.";
+      pairs.push({q:`What about: ${s.substring(0,60)}?`, a:s});
+    }
+    return pairs;
+  }
+  document.getElementById('make-cards').addEventListener('click', ()=>{
+    const txt = document.getElementById('notes').value.trim();
+    const pairs = makeCardsFromText(txt);
+    const mount = document.getElementById('cards'); mount.innerHTML="";
+    pairs.forEach(p=>{
+      const shell=document.createElement('div'); shell.className='flip';
+      shell.innerHTML=`
+        <div class="flip-inner">
+          <div class="face front">${p.q}</div>
+          <div class="face back">${p.a}</div>
+        </div>`;
+      shell.addEventListener('click', ()=> shell.classList.toggle('is-flipped'));
+      mount.appendChild(shell);
+    });
+  });
+
+</script>
+</body>
+</html>
